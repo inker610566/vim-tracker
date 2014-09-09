@@ -1,6 +1,7 @@
 "
-"	used like vim marker command, '# to jump to history(# is a number ranged from 1-9)
-"	1 is the lastest history, then 2,3 ...
+"	used like vim marker command, '# to jump to history,
+"	# is a list of marker defined in g:tracker_history_marker
+"	the 1st maker is the lastest history, then 2nd, 3rd ...
 "	reserve '' for jump to next history i.e. if your previously use jump to 1,then jump to 2
 "
 
