@@ -20,18 +20,20 @@ let g:tracker_max_history = len(g:tracker_history_marker)
 let g:tracker_is_trigger_marker = 0
 
 let s:cursor_history_idx = 0
+let s:cursor_prev_pos = getpos('.')
 
 function! s:Cursor_move_event()
 	if g:tracker_is_trigger_marker == 0
 		let l:first_marker = g:tracker_history_marker[0]
 		let [l:zero, l:line, l:col, l:zero] = getpos(".")
-		let [l:zero, l:line1, l:col1, l:zero] = getpos("'1")
+		let [l:zero, l:line1, l:col1, l:zero] = s:cursor_prev_pos
 		if l:line != l:line1
 			for idx in reverse(range(g:tracker_max_history-1))
 				call setpos("'".g:tracker_history_marker[idx+1], getpos("'".g:tracker_history_marker[idx]))
 			endfor
 		endif
-		call setpos("'".l:first_marker, [0, l:line, l:col, 0])
+		call setpos("'".l:first_marker, [0, l:line1, l:col1, 0])
+		let s:cursor_prev_pos = [0, l:line, l:col, 0]
 		let s:cursor_history_idx = 0
 	else
 		let g:tracker_is_trigger_marker = 0
