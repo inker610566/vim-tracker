@@ -16,14 +16,18 @@ if !exists('g:tracker_history_marker')
 	let g:tracker_history_marker = ['q','w','e','r','t','y','u','i','o']
 endif
 
-let g:tracker_max_history = len(g:tracker_history_marker)
-let g:tracker_is_trigger_marker = 0
 
-let s:cursor_history_idx = 0
-let s:cursor_prev_pos = getpos('.')
+let g:tracker_max_history = len(g:tracker_history_marker)
+
+function! s:BufferOpen()
+	let b:tracker_is_trigger_marker = 0
+	let b:cursor_history_idx = 0
+	let b:cursor_prev_pos = getpos('.')
+endfunction
+
 
 function! s:Cursor_move_event()
-	if g:tracker_is_trigger_marker == 0
+	if b:tracker_is_trigger_marker == 0
 		let [l:zero, l:line, l:col, l:zero] = getpos(".")
 		let [l:zero, l:line1, l:col1, l:zero] = s:cursor_prev_pos
 		if l:line != l:line1
@@ -50,6 +54,24 @@ function! s:Next_history()
 	return l:cur_marker
 endfunction
 
+function! s:Open_history()
+	" get history lines from current buffer
+	function! s:to_line(idx)
+		return getline(line("'".g:tracker_history_marker[a:idx]))
+	endfunction
+
+	let l:history_lines = map(range(len(g:tracker_history_marker)), "(v:val+1) . ':' . s:to_line(v:val)")
+
+	" create buffer
+	execute g:tracker_max_history . "new"
+	setlocal bufhidden=wipe buftype=nofile nonu fdc=0
+
+	call setline(1, l:history_lines)
+
+	setlocal nomodifiable
+	setlocal cursorline
+endfunction
+
 " add cursor move event
 autocmd CursorMoved * call s:Cursor_move_event()
 
@@ -59,3 +81,5 @@ for marker in g:tracker_history_marker
 endfor
 
 nnoremap <expr> '' <SID>Marker_goto(<SID>Next_history())
+
+command Trackerlist call <SID>Open_history()
