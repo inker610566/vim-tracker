@@ -17,39 +17,44 @@ if !exists('g:tracker_history_marker')
 endif
 
 let g:tracker_max_history = len(g:tracker_history_marker)
-let g:tracker_is_trigger_marker = 0
 
-let s:cursor_history_idx = 0
-let s:cursor_prev_pos = getpos('.')
+function! s:BufferOpen()
+	" do some initialize
+	let b:tracker_is_trigger_marker = 0
+	let b:cursor_history_idx = 0
+	let b:cursor_prev_pos = getpos('.')
+endfunction
 
 function! s:Cursor_move_event()
-	if g:tracker_is_trigger_marker == 0
+	if b:tracker_is_trigger_marker == 0
 		let [l:zero, l:line, l:col, l:zero] = getpos(".")
-		let [l:zero, l:line1, l:col1, l:zero] = s:cursor_prev_pos
+		let [l:zero, l:line1, l:col1, l:zero] = b:cursor_prev_pos
 		if l:line != l:line1
 			for idx in reverse(range(g:tracker_max_history-1))
 				call setpos("'".g:tracker_history_marker[idx+1], getpos("'".g:tracker_history_marker[idx]))
 			endfor
 			call setpos("'".g:tracker_history_marker[0], [0, l:line1, l:col1, 0])
 		endif
-		let s:cursor_prev_pos = [0, l:line, l:col, 0]
-		let s:cursor_history_idx = 0
+		let b:cursor_prev_pos = [0, l:line, l:col, 0]
+		let b:cursor_history_idx = 0
 	else
-		let g:tracker_is_trigger_marker = 0
+		let b:tracker_is_trigger_marker = 0
 	endif
 endfunction
 
 function! s:Marker_goto(markname)
-	let g:tracker_is_trigger_marker = 1
+	let b:tracker_is_trigger_marker = 1
 	return "'".a:markname
 endfunction
 
 function! s:Next_history()
-	let l:cur_marker = g:tracker_history_marker[s:cursor_history_idx]
-	let s:cursor_history_idx = (s:cursor_history_idx+1) % g:tracker_max_history
+	let l:cur_marker = g:tracker_history_marker[b:cursor_history_idx]
+	let b:cursor_history_idx = (b:cursor_history_idx+1) % g:tracker_max_history
 	return l:cur_marker
 endfunction
 
+" add BufRead,BUfNewFile event
+autocmd BufRead,BufNewFile * call <SID>BufferOpen()
 " add cursor move event
 autocmd CursorMoved * call s:Cursor_move_event()
 
