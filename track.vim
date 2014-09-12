@@ -20,10 +20,12 @@ endif
 let g:tracker_max_history = len(g:tracker_history_marker)
 
 function! s:BufferOpen()
-	" do some initialize
-	let b:tracker_is_trigger_marker = 0
-	let b:cursor_history_idx = 0
-	let b:cursor_prev_pos = getpos('.')
+	if !exists('b:tracker_is_trigger_marker')
+		" do some initialize
+		let b:tracker_is_trigger_marker = 0
+		let b:cursor_history_idx = 0
+		let b:cursor_prev_pos = getpos('.')
+	endif
 endfunction
 
 function! s:Cursor_move_event()
@@ -56,11 +58,15 @@ endfunction
 
 function! s:Open_history()
 	" get history lines from current buffer
-	function! s:to_line(idx)
-		return getline(line("'".g:tracker_history_marker[a:idx]))
+	function! s:to_line_no(idx)
+		return line("'".g:tracker_history_marker[a:idx])
 	endfunction
 
-	let l:history_lines = map(range(len(g:tracker_history_marker)), "(v:val+1) . ':' . s:to_line(v:val)")
+	function! s:to_line(idx)
+		return getline(s:to_line_no(a:idx))
+	endfunction
+
+	let l:history_lines = map(range(len(g:tracker_history_marker)), "g:tracker_history_marker[v:val] . ') line ' . s:to_line_no(v:val) . ':' . s:to_line(v:val)")
 
 	" create buffer
 	execute g:tracker_max_history . "new"
@@ -73,9 +79,9 @@ function! s:Open_history()
 endfunction
 
 " add BufRead,BUfNewFile event
-autocmd BufRead,BufNewFile * call <SID>BufferOpen()
+autocmd BufEnter * call <SID>BufferOpen()
 " add cursor move event
-autocmd CursorMoved * call s:Cursor_move_event()
+autocmd CursorMoved * call <SID>Cursor_move_event()
 
 " hook goto marker
 for marker in g:tracker_history_marker
@@ -84,4 +90,4 @@ endfor
 
 nnoremap <expr> '' <SID>Marker_goto(<SID>Next_history())
 
-command Trackerlist call <SID>Open_history()
+command Tracklist call <SID>Open_history()
