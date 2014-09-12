@@ -45,7 +45,7 @@ function! s:Cursor_move_event()
 	endif
 endfunction
 
-function! s:Marker_goto(markname)
+function! g:Marker_goto(markname)
 	let b:tracker_is_trigger_marker = 1
 	return "'".a:markname
 endfunction
@@ -76,6 +76,14 @@ function! s:Open_history()
 
 	setlocal nomodifiable
 	setlocal cursorline
+
+	function! s:TrackList_goto()
+		let l:quit_list = ":q\<CR>"
+		let l:goto_marker = g:Marker_goto(g:tracker_history_marker[line('.')-1])
+		return l:quit_list . l:goto_marker
+	endfunction
+	
+	nnoremap <expr><buffer> <CR> <SID>TrackList_goto()
 endfunction
 
 " add BufRead,BUfNewFile event
@@ -85,9 +93,9 @@ autocmd CursorMoved * call <SID>Cursor_move_event()
 
 " hook goto marker
 for marker in g:tracker_history_marker
-	execute "nnoremap <expr> '".marker.' <SID>Marker_goto("'.marker.'")'
+	execute "nnoremap <expr> '".marker.' g:Marker_goto("'.marker.'")'
 endfor
 
-nnoremap <expr> '' <SID>Marker_goto(<SID>Next_history())
+nnoremap <expr> '' g:Marker_goto(<SID>Next_history())
 
 command Tracklist call <SID>Open_history()
